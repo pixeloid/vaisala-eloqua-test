@@ -14,8 +14,8 @@
 
           // Mass validate form fields before submitting.
           $('[id^="field"]', $form).filter(function() {
-              return this.id.match(/\d+$/);
-            }
+                return this.id.match(/\d+$/);
+              }
           ).each(function() {
             var obj = window[$(this).attr('id')];
 
@@ -24,9 +24,9 @@
               objs.push(obj);
             }
           });
-          
+
           var formMassValidity = LiveValidation.massValidate(objs);
-          
+
 
           if (formMassValidity === true) {
             // e.preventDefault();
@@ -71,13 +71,15 @@
         var $context = $('.elq-form', context);
 
         $('select:not([name=country],[name=stateProv])', $context).chosen({
-          "disable_search": true
+          "disable_search": true,
+          "width": "300px"
         });
 
         // Hide wrappers for hidden fields.
         $('input[type="hidden"]', $context).parents('.sc-view').hide();
 
         // Attach Chosen on Eloqua forms.
+        settings.chosen.options.width = "300px";
         $('select', $context).chosen(settings.chosen.options);
 
         // Remove padding-top from textarea labels...
@@ -91,9 +93,9 @@
         });
 
         /* Trigger single checkbox to be selected on label click */
-        $('.checkbox-label').each(function() {          
+        $('.checkbox-label').each(function() {
           var $input = $(this).siblings('input');
-          
+
           $(this).attr('for', $input.attr('name'));
           $(this).click(function() {
             $input.trigger('click');
@@ -103,7 +105,7 @@
         });
 
         $('input[type="submit"]', $context).css({
-          'background-position': ($('input[type="submit"]', $context).outerWidth() - 40) + 'px center' 
+          'background-position': ($('input[type="submit"]', $context).outerWidth() - 40) + 'px center'
         });
 
         $('span.radio-option').each(function(i) {

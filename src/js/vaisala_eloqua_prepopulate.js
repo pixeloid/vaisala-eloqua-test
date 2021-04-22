@@ -222,7 +222,7 @@
       setTimeout(function() {
 
         Drupal.behaviors.eloquaPrepopulate.SetElqContactContent();
-      }, 500);
+      }, 1500);
     },
 
     /**
@@ -230,6 +230,27 @@
      */
     SetElqContactContent: function() {
       if (typeof GetElqContentPersonalizationValue == 'function') {
+        $('input.elq-item-input, select.elq-item-select', '.elq-form').each(function(){
+          var name = $(this).attr('name');
+          name = 'C_' + name.charAt(0).toUpperCase() + name.slice(1)
+
+          var eloquaValue = GetElqContentPersonalizationValue(name);
+          $(this).val(eloquaValue)
+          $(this).attr('data-previous', eloquaValue);
+
+          if (name == 'C_EmailAddress') {
+            $(this).on('keyup change', function (){
+               if($(this).val() !== $(this).attr('data-previous')) {
+                 Drupal.behaviors.eloquaPrepopulate.reset_form();
+               } else {
+                 Drupal.behaviors.eloquaPrepopulate.SetElqContactContent();
+               }
+            });
+
+          }
+        })
+
+        /*
         $( "input[name=emailAddress]" ).val(GetElqContentPersonalizationValue('C_EmailAddress'));
         $( "input[name=firstName]" ).val(GetElqContentPersonalizationValue('C_FirstName'));
         $( "input[name=lastName]" ).val(GetElqContentPersonalizationValue('C_LastName'));
@@ -249,39 +270,37 @@
           $("select[name=industry1]").trigger("chosen:updated");
         }
 
+*/
         var C_Country = GetElqContentPersonalizationValue('C_Country');
         $( "select[name=country]" ).attr('data-previous', '');
-
         if (C_Country != '') {
-          $("select[name=country]").val(C_Country);
-          $("select[name=country]").trigger("chosen:updated");
+         // $("select[name=country]").val(C_Country);
 
-          if($( "select[name=country]" ).closest('.pp-stage').length) {
-            $( "select[name=country]" ).attr('data-previous',  C_Country);
-          }
+         // if($( "select[name=country]" ).closest('.pp-stage').length) {
+         //   $( "select[name=country]" ).attr('data-previous',  C_Country);
+         // }
         }
 
-        console.log('country previous set')
 
-        var C_State_Prov = GetElqContentPersonalizationValue('C_State_Prov');
-        $( "select[name=stateProv]" ).attr('data-previous', '');
+          var C_State_Prov = GetElqContentPersonalizationValue('C_State_Prov');
+          $( "select[name=stateProv]" ).attr('data-previous', '');
 
         if (C_State_Prov != '') {
-          $("select[name=stateProv]").val(C_State_Prov);
-          $("select[name=stateProv]").trigger("chosen:updated");
+      //    $("select[name=stateProv]").val(C_State_Prov);
 
-          if($( "select[name=stateProv]" ).closest('.pp-stage').length) {
-            $( "select[name=stateProv]" ).attr('data-previous',  C_State_Prov);
-          }
+       //   if($( "select[name=stateProv]" ).closest('.pp-stage').length) {
+       //     $( "select[name=stateProv]" ).attr('data-previous',  C_State_Prov);
+       //   }
         }
 
-        console.log('stateProv previous set')
 
 
 
         if (GetElqContentPersonalizationValue('C_Interest_Area1') != '') { $("select[name=interestArea1]").val(GetElqContentPersonalizationValue('C_Interest_Area1'));
-          $("select[name=interestArea1]").trigger("chosen:updated");
         }
+
+        $("select").trigger("chosen:updated");
+
         var optin = GetElqContentPersonalizationValue('C_OptIn');
         var double_optin = GetElqContentPersonalizationValue('C_SYS_Opt_in1');
 
@@ -307,7 +326,6 @@
 
     progressiveForms: function () {
 
-      console.log('progressiveForms', revealed);
 
       if (typeof config != 'undefined') {
         if (config.mode === 'list') {
@@ -374,9 +392,8 @@
           var group;
           for (var i = 0; i < config.numStages; i++) {
             group = document.querySelector('#form' + config.formId + ' #pps' + i);
-            console.log(group, groupHasPreviousValues(group))
-            if (!groupHasPreviousValues(group) || (i === (config.numStages - 1))) {
-              console.log('Show Group', group)
+
+            if (!groupHasPreviousValues(group)) {
               showGroup(group, i);
               break;
             }
@@ -407,8 +424,38 @@ var hideGroup = function(group, index) {
   }
 };
 
+var showField = function (field, index) {
+  field.classList.remove('hidden-group');
+  field.removeAttribute('style');
+  revealed.push(index + '');
+  var vf = ppv[index];
+  if (vf) vf();
+
+  var el = $('[class*=elq-item]', field);
+
+  $(el).each(function () {
+    var validation = new LiveValidation($(this).attr('id'));
+    validation.enable()
+  })
+};
+
 var hideField = function(field, index) {
-  field.style.display = 'none';
+  field.removeAttribute('style');
+  field.classList.add('hidden-group');
+
+  var el = $('input, select', field);
+
+  $(el).each(function () {
+    var id = $(this).attr('id');
+    if  (id){
+      var validation = new LiveValidation(id);
+      $(el).css('background', 'yellow')
+      if (!$(el).val()) {
+        validation.disable()
+      }
+
+    }
+  })
 
   var indexInArray = revealed.indexOf(index + '');
   if (indexInArray > -1) {
